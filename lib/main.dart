@@ -1,6 +1,5 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_bloc_implementation/counter_bloc.dart';
 
 void main() {
   runApp(MyApp());
@@ -11,49 +10,63 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Flutter Bloc Demo',
+      title: 'Flutter Streams Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: BlocProvider(
-          create: (BuildContext context) => CounterBloc(0),
-          child: CounterScreen()),
+      home: CounterScreen(),
     );
   }
 }
 
-class CounterScreen extends StatelessWidget {
-  const CounterScreen({Key? key}) : super(key: key);
+class CounterScreen extends StatefulWidget {
+  CounterScreen({Key? key}) : super(key: key);
+
+  @override
+  _CounterScreenState createState() => _CounterScreenState();
+}
+
+class _CounterScreenState extends State<CounterScreen> {
+  final StreamController<int> _controller = StreamController();
+
+  int counter = 0;
+
+  @override
+  void dispose() {
+    _controller.close();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final _counterBloc = BlocProvider.of<CounterBloc>(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text('Flutter Bloc Demo'),
+        title: Text('Flutter Streams Demo'),
       ),
       body: Center(
         child: Column(
           children: [
             Spacer(),
-            BlocBuilder<CounterBloc, int>(
-                builder: (BuildContext context, int state) {
-              return Text(
-                'Counter Vale: $state',
-                style: TextStyle(fontSize: 22),
-              );
-            }),
+            StreamBuilder<int>(
+                stream: _controller.stream,
+                initialData: 0,
+                builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
+                  return Text(
+                    'Counter Value: ${snapshot.data}',
+                    style: Theme.of(context).textTheme.headline3,
+                  );
+                }),
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                _counterBloc.add(CounterEvents.increment);
+                _controller.sink.add(counter++);
               },
               child: Text('Increment'),
             ),
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                _counterBloc.add(CounterEvents.decrement);
+                _controller.sink.add(counter--);
               },
               child: Text('Decrement'),
             ),
